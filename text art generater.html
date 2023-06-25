@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>ASCII Art Generator</title>
+</head>
+
+<body>
+  <input type="file" id="imageInput">
+  <br>
+  <label for="asciiWidth">ASCII Width:</label>
+  <input type="number" id="asciiWidth" min="1">
+  <br>
+  <label for="asciiHeight">ASCII Height:</label>
+  <input type="number" id="asciiHeight" min="1">
+  <br>
+  <button id="generateButton" disabled>Generate ASCII Art</button>
+  <button id="copyButton" disabled>Copy ASCII Art</button> <!-- Add the copy button -->
+  <br>
+  <img id="imagePreview">
+  <br>
+  <pre id="asciiArt"></pre>
+
+  <script>
+    function generateASCIIArt(imageData, asciiWidth, asciiHeight) {
+      var img = new Image();
+
+      img.onload = function () {
+        var canvas = document.createElement('canvas');
+        var context = canvas.getContext('2d');
+
+        var aspectRatio = img.width / img.height;
+        var adjustedHeight = Math.round(asciiWidth / aspectRatio);
+        var adjustedAsciiHeight = Math.min(asciiHeight, adjustedHeight);
+
+        canvas.width = asciiWidth;
+        canvas.height = adjustedAsciiHeight;
+
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        var asciiText = '';
+        var imageData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+
+        for (var i = 0; i < imageData.length; i += 4) {
+          var r = imageData[i];
+          var g = imageData[i + 1];
+          var b = imageData[i + 2];
+          var brightness = (r + g + b) / 3;
+
+          var asciiChar = ' ';
+
+          if (brightness >= 230) {
+            asciiChar = ' ';
+          } else if (brightness >= 200) {
+            asciiChar = '.';
+          } else if (brightness >= 180) {
+            asciiChar = '*';
+          } else if (brightness >= 160) {
+            asciiChar = ':';
+          } else if (brightness >= 130) {
+            asciiChar = 'o';
+          } else if (brightness >= 100) {
+            asciiChar = '&';
+          } else if (brightness >= 70) {
+            asciiChar = '8';
+          } else if (brightness >= 50) {
+            asciiChar = '#';
+          } else {
+            asciiChar = '@';
+          }
+
+          asciiText += asciiChar;
+
+          if ((i + 4) % (canvas.width * 4) === 0) {
+            asciiText += '\n';
+          }
+        }
+
+        document.getElementById('asciiArt').textContent = asciiText;
+        document.getElementById('copyButton').disabled = false; // Enable the copy button
+      };
+
+      img.src = imageData;
+    }
+
+    document.getElementById('imageInput').addEventListener('change', function () {
+      var file = this.files[0];
+      var reader = new FileReader();
+
+      reader.onload = function (event) {
+        var imageData = event.target.result;
+        var img = new Image();
+
+        img.onload = function () {
+          document.getElementById('imagePreview').src = img.src;
+          document.getElementById('asciiWidth').value = img.width;
+          document.getElementById('asciiHeight').value = img.height;
+          document.getElementById('generateButton').disabled = false;
+        };
+
+        img.src = imageData;
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('generateButton').addEventListener('click', function () {
+      var asciiWidth = parseInt(document.getElementById('asciiWidth').value);
+      var asciiHeight = parseInt(document.getElementById('asciiHeight').value);
+      var imageData = document.getElementById('imageInput').files[0];
+
+      var reader = new FileReader();
+
+      reader.onload = function (event) {
+        var imageData = event.target.result;
+        generateASCIIArt(imageData, asciiWidth, asciiHeight);
+      };
+
+      reader.readAsDataURL(imageData);
+    });
+
+    document.getElementById('copyButton').addEventListener('click', function () {
+      var asciiArt = document.getElementById('asciiArt').textContent;
+      copyToClipboard(asciiArt);
+    });
+
+    function copyToClipboard(text) {
+      var textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+  </script>
+
+</body>
+
+</html>
